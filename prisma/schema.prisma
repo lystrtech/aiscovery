@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Pillar {
+  AI_CAPABILITIES
+  AI_SOLUTIONS
+  AI_INFRASTRUCTURE
+  ECOSYSTEM_SERVICES
+}
+
+enum Role {
+  USER
+  EXPERT
+  ADMIN
+}
+
+enum ReviewTargetType {
+  COMPANY
+  PRODUCT
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Company {
+  id               Int               @id @default(autoincrement())
+  name             String
+  slug             String            @unique
+  websiteUrl       String?
+  logoUrl          String?
+  shortDescription String?
+  longDescription  String?
+  headquarters     String?
+  foundedYear      Int?
+  employeeRange    String?
+  isActive         Boolean           @default(true)
+  seoTitle         String?
+  seoDescription   String?
+  seoCanonicalUrl  String?
+  seoRobots        String?
+  ogTitle          String?
+  ogDescription    String?
+  ogImageUrl       String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  products         Product[]
+  companyCategories CompanyCategory[]
+  reviews          Review[]
+}
+
+model Product {
+  id               Int               @id @default(autoincrement())
+  companyId        Int
+  company          Company           @relation(fields: [companyId], references: [id])
+  name             String
+  slug             String            @unique
+  shortDescription String?
+  longDescription  String?
+  pricingModel     String?
+  deployment       String?
+  isActive         Boolean           @default(true)
+  seoTitle         String?
+  seoDescription   String?
+  seoCanonicalUrl  String?
+  seoRobots        String?
+  ogTitle          String?
+  ogDescription    String?
+  ogImageUrl       String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  productCategories ProductCategory[]
+  reviews          Review[]
+}
+
+model Category {
+  id                Int               @id @default(autoincrement())
+  name              String
+  slug              String            @unique
+  pillar            Pillar
+  parentId          Int?
+  parent            Category?         @relation("CategoryToParent", fields: [parentId], references: [id])
+  children          Category[]        @relation("CategoryToParent")
+  description       String?
+  isActive          Boolean           @default(true)
+  seoTitle          String?
+  seoDescription    String?
+  seoCanonicalUrl   String?
+  seoRobots         String?
+  ogTitle           String?
+  ogDescription     String?
+  ogImageUrl        String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  companyCategories CompanyCategory[]
+  productCategories ProductCategory[]
+}
+
+model CompanyCategory {
+  companyId  Int
+  categoryId Int
+  company    Company  @relation(fields: [companyId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@id([companyId, categoryId])
+}
+
+model ProductCategory {
+  productId  Int
+  categoryId Int
+  product    Product  @relation(fields: [productId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@id([productId, categoryId])
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  email        String   @unique
+  passwordHash String?
+  role         Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reviews   Review[]
+}
+
+model Review {
+  id         Int              @id @default(autoincrement())
+  userId     Int
+  user       User             @relation(fields: [userId], references: [id])
+  targetType ReviewTargetType
+  companyId  Int?
+  productId  Int?
+  company    Company?         @relation(fields: [companyId], references: [id])
+  product    Product?         @relation(fields: [productId], references: [id])
+  rating     Int
+  title      String?
+  body       String?
+  isExpert   Boolean          @default(false)
+  status     ReviewStatus
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([companyId])
+  @@index([productId])
+  @@index([status])
+}

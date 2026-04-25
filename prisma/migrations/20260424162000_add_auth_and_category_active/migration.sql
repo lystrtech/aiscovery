@@ -1,0 +1,2 @@
+ALTER TABLE "User" ADD COLUMN "passwordHash" TEXT;
+ALTER TABLE "Category" ADD COLUMN "isActive" BOOLEAN NOT NULL DEFAULT true;
